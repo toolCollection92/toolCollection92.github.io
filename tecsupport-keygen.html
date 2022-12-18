@@ -1,0 +1,179 @@
+<!--
+  Hi there =)
+  Please feel free to disect this code for anything that may help you.
+  It was written in JS to allow a feeling of safety. No Serial number is transmitted to any servers, its all handled locally.
+
+  The developer of TecSupport probably meant best when establishing those security measures but he failed.
+
+  If you use those Plugins in a private Setting - no shame. But if you make a profit of it, please support the developer by buying the product!
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>TecSupport Keygen</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>TecSupport Keygen</h1>
+    <table>
+      <tr>
+        <td><label for="hsid">Homeserver ID / MAC</label></td>
+        <td>
+          <input
+            type="text"
+            id="hsid"
+            name="hsid"
+            alt="Gira Homeserver ID"
+            placeholder="000AB3XXXXXX"
+            value="000AB3022955"
+            maxlength="12"
+            minlength="12"
+            length="12"
+            size="12"
+            pattern="[0-9A-Fa-f]{12}"
+            style="text-transform: uppercase;"
+            onchange="generateSerial()"
+          />
+        </td>
+      </tr>
+
+      <tr>
+        <td><label for="product">TecSupport Product</label></td>
+        <td>
+          <select
+            id="product"
+            name="product"
+            alt="TecSupport Product"
+            onChange="generateSerial()"
+          >
+            <option value="11895">11895 Auerswald COMfortel IP</option>
+            <option value="11899">11899 Einschalthelligkeit Tag-Nacht</option>
+            <option value="13666">13666 Musik Sensorsteuerung</option>
+            <option value="13667">13667 Mehrfachklick</option>
+            <option value="13668">13668 Gartenbewaesserung</option>
+            <option value="13669">13669 Stoermeldungen</option>
+            <option value="13670">13670 Szenen Lernsperre</option>
+            <option value="13671">13671 Beschattungsautomatik A</option>
+            <option value="13680">13680 HS-Info</option>
+            <option value="13681">13681 UDP-Sender</option>
+            <option value="13682">13682 Ping</option>
+            <option value="13684">13684 RGB Farbgenerator</option>
+            <option value="13685">13685 Wecker</option>
+            <option value="13686">13686 Betriebsmodusumschaltung</option>
+            <option value="13690">13690 Sequenzer</option>
+            <option value="13691">13691 Beschattungsautomatik B</option>
+            <option value="13692">13692 SonneMond</option>
+            <option value="14030">14030 RouterOS</option>
+            <option value="14031">14031 Nuki-Bridge</option>
+            Stoermeldungen
+          </select>
+        </td>
+      </tr>
+
+      <tr>
+        <td><label for="serialNo">License Key</label></td>
+        <td>
+          <input
+            type="text"
+            id="serialNo"
+            name="serialNo"
+            alt="TecSupport License Key"
+            value="00000000000000000000000000000000000000000000"
+            size="132"
+            readonly
+          />
+          <input
+            type="button"
+            id="copyButton"
+            name="copyButton"
+            value="Copy"
+            disabled
+            onClick="
+            var serialNo = document.getElementById('serialNo');
+            serialNo.select();
+            serialNo.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(serialNo.value);
+          "
+          />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <input
+            type="submit"
+            value="generate license key"
+            onClick="generateSerial()"
+            style="vertical-align: right;"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <p id="debugInfo" name="debugInfo"></p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+<script src="aes.js"></script>
+<script>
+  console.log("Please disperse!");
+  console.log("Nothing to see here.");
+
+  function generateSerial() {
+    var hsid = document.getElementById("hsid").value;
+    var product = document.getElementById("product").value;
+
+    document.getElementById("debugInfo").innerHTML = "LicenseGen started<br>";
+
+    if (!hsid.match(/^(000AB3[0-9A-Fa-f]{6})$/)) {
+      serialNo.value = "No valid MAC-Address";
+      return;
+    }
+    writeDebug("MAC is valid");
+
+    const key = CryptoJS.enc.Utf8.parse("6!hgUj772DfnmLl3");
+    const iv = CryptoJS.enc.Utf8.parse("abcdefghijklmnop");
+
+    var kunde = "TecSupport";
+    var special = "0000000000";
+
+    hsid += Math.floor(Math.random() * 899) + 100;
+    kunde += Math.floor(Math.random() * 8999) + 1000;
+    product += " " + Math.floor(Math.random() * 899) + 100;
+    special += Math.floor(Math.random() * 8999) + 1000;
+
+    var key1 = atob(CryptoJS.AES.encrypt(hsid, key, { iv: iv }));
+    var key2 = atob(CryptoJS.AES.encrypt(kunde, key, { iv: iv }));
+    var key3 = atob(CryptoJS.AES.encrypt(product, key, { iv: iv }));
+    var key4 = atob(CryptoJS.AES.encrypt(special, key, { iv: iv }));
+
+    //document.getElementById("serialNo").value = btoa(key1 + key2 + key3 + key4);
+    var rawkey = key1 + key2 + key3 + key4;
+    var hexkey = "";
+    for (let i = 0; i < rawkey.length; i++)
+      hexkey += rawkey.charCodeAt(i).toString(16).padStart(2, "0");
+
+    document.getElementById("serialNo").value = hexkey;
+
+    writeDebug("SerialLength (4*16):" + (key1 + key2 + key3 + key4).length);
+    writeDebug(
+      "SerialLength hex:" + document.getElementById("serialNo").value.length
+    );
+
+    var productName = document.getElementById("product");
+    var text = productName.options[productName.selectedIndex].text;
+    writeDebug("Product: " + text);
+    writeDebug("Key: " + hexkey);
+  }
+
+  generateSerial();
+
+  function writeDebug(debugText) {
+    document.getElementById("debugInfo").innerHTML += debugText + "<br>";
+  }
+</script>

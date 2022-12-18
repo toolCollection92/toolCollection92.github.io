@@ -1,0 +1,365 @@
+<!--
+  Hi there =)
+  Please feel free to disect this code for anything that may help you.
+  It was written in JS to allow a feeling of safety. No Serial number is transmitted to any servers, its all handled locally.
+
+  The developer of Grot probably meant best when establishing those security measures but he failed.
+
+  If you use those Plugins in a private Setting - no shame. But if you make a profit of it, please support the developer by buying the product!
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Grot Keygen</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Grot Keygen</h1>
+    <table>
+      <tr>
+        <td><label for="hsid">Homeserver ID / MAC</label></td>
+        <td>
+          <input
+            type="text"
+            id="hsid"
+            name="hsid"
+            alt="Gira Homeserver ID"
+            placeholder="000AB3XXXXXX"
+            value="000AB3022955"
+            maxlength="12"
+            minlength="12"
+            length="12"
+            size="12"
+            pattern="[0-9A-Fa-f]{12}"
+            style="text-transform: uppercase;"
+            onchange="generateSerial()"
+          />
+        </td>
+      </tr>
+
+      <tr>
+        <td><label for="product">Grot Product</label></td>
+        <td>
+          <select
+            id="product"
+            name="product"
+            alt="Grot Product"
+            onChange="generateSerial()"
+          >
+            <option value="0">QCCamera Pro (50 Cameras)</option>
+            <option value="1">QCPlus</option>
+            <option value="2">HS-WeatherForecast</option>
+            <option value="3">HSConnect Hue (Unlimited Lamps)</option>
+            <option value="4">HSConnect HomeCockpit</option>
+            <option value="5">HSConnect SONOS Pro (32 Zones)</option>
+            <option value="5p">HSConnect SONOS Pro Plugin</option>
+            <option value="6">ScenarioPro (Professional)</option>
+            <option value="7">ArchiveSQL (Professional)</option>
+          </select>
+        </td>
+      </tr>
+
+      <tr>
+        <td><label for="serialNo">License Key</label></td>
+        <td>
+          <input
+            type="text"
+            id="serialNo"
+            name="serialNo"
+            alt="Grot License Key"
+            value="00000000000000000000000000000000000000000000"
+            size="85"
+            style="text-transform: uppercase;"
+            readonly
+          />
+          <input
+            type="button"
+            id="copyButton"
+            name="copyButton"
+            value="Copy"
+            disabled
+            onClick="
+            var serialNo = document.getElementById('serialNo');
+            serialNo.select();
+            serialNo.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(serialNo.value);
+          "
+          />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <input
+            type="submit"
+            value="generate license key"
+            onClick="generateSerial()"
+            style="vertical-align: right;"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <p id="debugInfo" name="debugInfo"></p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+<script>
+  console.log("Please disperse!");
+  console.log("Nothing to see here.");
+  var startTime = Date.now();
+
+  function generateSerial() {
+    startTime = Date.now();
+    var serialNo = document.getElementById("serialNo");
+    var hsid = document.getElementById("hsid").value;
+    var product = document.getElementById("product").value;
+
+    document.getElementById("copyButton").disabled = true;
+
+    document.getElementById("debugInfo").innerHTML =
+      "[0000] LicenseGen started<br>";
+
+    if (!hsid.match(/^(000AB3[0-9A-Fa-f]{6})$/)) {
+      serialNo.value = "No valid MAC-Address";
+      return;
+    }
+    writeDebug("MAC is valid");
+
+    var hsidRev = hsid.split("").reverse().join("");
+    var hsidRevArray = hsidRev.match(/.{2}/g);
+
+    var secKey = (Math.floor(Math.random() * 99999999) + 1600000000) //       i'm sure there is a better way but i am lazy af
+      .toString(); //                                                           Generation of the Security Keys
+    //the first two digits are never really used - but whatever
+
+    writeDebug("secKey:" + secKey);
+    var secKeyRev = secKey.split("").reverse().join("");
+    writeDebug("secKeyRev:" + secKeyRev);
+
+    var security1 = parseInt(secKey.substr(7, 3));
+    writeDebug("security1:" + security1);
+    var security2 = parseInt(secKey.substr(6, 3));
+    writeDebug("security2:" + security2);
+    var security3 = parseInt(secKey.substr(5, 3));
+    writeDebug("security3:" + security3);
+    var security4 = parseInt(secKey.substr(4, 3));
+    writeDebug("security4:" + security4);
+    var security5 = parseInt(secKey.substr(3, 3));
+    writeDebug("security5:" + security5);
+    var security6 = parseInt(secKey.substr(2, 3));
+    writeDebug("security6:" + security6);
+
+    var key01 = 116; //                                       XXX       116 (HEX 74) <- Max Int time
+    var key02 = parseInt(secKeyRev.substr(0, 2), 16); //      XXX       "Safety"byte 1
+    var key03 = parseInt(hsidRev.substr(0, 2), 16) * 2; //    XXXX      MAC 12+11 *2
+    var key04 = 9999; //                                  <-- XXXX      "Amount" X0 <- tens digit BUT AS THE ASCII CODE
+    var key05 = 99; //                                        XXX       99 (HEX 63) <- Max Int time
+    var key06 = parseInt(secKeyRev.substr(2, 2), 16); //      XXX       "Safety"byte 2
+    var key07 = parseInt(hsidRev.substr(2, 2), 16) * 3; //    XXXX      MAC 10+09 *3
+    var key08 = 9999; //                                  <-- XXXX      "Amount" 0X <- ones digit BUT AS THE ASCII CODE
+    var key09 = 132; //                                       XXX       132 (HEX 84) <- Max Int time
+    var key10 = parseInt(secKeyRev.substr(4, 2), 16); //      XXX       "Safety"byte 3
+    var key11 = parseInt(hsidRev.substr(4, 2), 16) * 4; //    XXXX      MAC 08+07 *4
+    var key12 = 9999; //                                  <-- XXXX      "Version" X0 <- tens digit BUT AS THE ASCII CODE O_O 0=48
+    var key13 = 116; //                                       XXX       116 (HEX 74) <- Max Int time
+    var key14 = 99999; //                                 <-- XXXXX     "Super Secret" Product ID
+    var key15 = parseInt(secKeyRev.substr(6, 2), 16); //      XXX       "Safety"byte 4
+    var key16 = parseInt(hsidRev.substr(6, 2), 16) * 5; //    XXXX      MAC 06+05 *5 (is always 0295, but whatever)
+    var key17 = 9999; //                                  <-- XXXX      "Version" 0X <- ones digit BUT AS THE ASCII CODE ó.ò 0=48, 1=49 etc
+    var key18 = 18; //                                        XXX       18 (HEX 12) <- Max Int time
+    var key19 = parseInt(secKeyRev.substr(8, 2), 16); //      XXX       "Safety"byte 5 <- is never really used anyway :D
+    var key20 = parseInt(hsidRev.substr(8, 2), 16) * 6; //    XXXX      MAC 04+03 *6 (is always 0960, but whatever)
+    var key21 = parseInt(hsidRev.substr(10, 2), 16) * 7; //   XXXX      MAC 02+01 *7 (is always 0000, but whatever)
+    //@Grot developer -> https://en.wikipedia.org/wiki/Year_2038_problem
+    //All Grot Products will stop working at the 19th January 2038, due to the "lifetime" hardcoded as a int value - thats not good
+    //(this obviously includes valid purchases of keys)
+
+    var temp0 = 0;
+
+    switch (product) {
+      case "0": //QCCamera Pro
+        key04 = 53; //                                        XXXX      "5" Cameras tens digit
+        key08 = 49; //                                        XXXX      "1" Cameras ones digit (50 Cameras + Door Station)
+        key12 = 48; //                                        XXXX      "0" Version tens digit
+        key17 = 50; //                                        XXXX      "2" Version ones digit, 0=Demo, 1=Normal, 2=Pro (?)
+        key14 = 10101 * 3 + 12345; //                         XXXXX     10101 = Product-ID
+        break;
+
+      case "1": //QCPlus
+        key04 = 48; //                                        XXXX      "0"
+        key08 = 48; //                                        XXXX      "0"
+        key12 = 48; //                                        XXXX      "0" Version tens digit
+        key17 = 49; //                                        XXXX      "1" Version ones digit, Version 1 is currently used
+        key14 = 10103 * 3 + 12345; //                         XXXXX     10103 = Product-ID
+        break;
+
+      case "2": //HS-WeatherForecast
+        key04 = 48; //                                        XXXX      "0" Var tens digit
+        key08 = 48; //                                        XXXX      "0" Var ones digit
+        key12 = 48; //                                        XXXX      "0" Ver tens digit
+        key17 = 49; //                                        XXXX      "1" Ver ones digit, Version 1 is currently used
+        key14 = 13461 * 3 + 12345; //                         XXXXX     13461 = Product-ID
+        break;
+
+      case "3": //HSConnect Hue
+        key04 = 48; //                                        XXXX      "0" Lamps tens digit
+        key08 = 54; //                                        XXXX      "6" Lamps ones digit 0=1, 1=5, 2=10, 3=25, 4=50, 5=100, 6=unlimited
+        key12 = 48; //                                        XXXX      "0" Ver tens digit
+        key17 = 49; //                                        XXXX      "1" Ver ones digit, Version 1 is currently used
+        key14 = 13230 * 3 + 12345; //                         XXXXX     13230 = Product-ID
+        break;
+
+      case "4": //HSConnect HomeCockpit
+        key04 = 48; //                                        XXXX      "0"
+        key08 = 48; //                                        XXXX      "0"
+        key12 = 48; //                                        XXXX      "0" Version tens digit
+        key17 = 49; //                                        XXXX      "1" Version ones digit, Version 1 is currently used
+        key14 = 13450 * 3 + 12345; //                         XXXXX     13450 = Product-ID
+        break;
+
+      case "5": //HSConnect SONOS Pro
+      case "5p": //HSConnect SONOS Pro
+        key04 = 51; //                                        XXXX      "3" Var tens digit
+        key08 = 52; //                                        XXXX      "4" Var ones digit 34='32 Player, IP- und QC-Schnittstelle'
+        key12 = 48; //                                        XXXX      "0" Version tens digit
+        key17 = 49; //                                        XXXX      "1" Version ones digit, Version 1 is currently used
+        key14 = 13210 * 3 + 12345; //                         XXXXX     13210 = Product-ID
+        break;
+
+      case "6": //ScenarioPro
+        key04 = 48; //                                        XXXX      "0" Var tens digit
+        key08 = 49; //                                        XXXX      "1" Var ones digit, 0=Standard, 1=Professional
+        key12 = 48; //                                        XXXX      "0" Ver tens digit
+        key17 = 49; //                                        XXXX      "1" Ver ones digit, Version 1 is currently used
+        key14 = 25501 * 3 + 12345; //                         XXXXX     25501 = Product-ID (pnr2)
+        break;
+
+      case "7": //ArchiveSQL
+        key04 = 50; //                                        XXXX      "2" Var tens digit, 1=Standard, 2=Professional
+        key08 = 48; //                                        XXXX      "0" Var ones digit
+        key12 = 48; //                                        XXXX      "0" Ver tens digit
+        key17 = 49; //                                        XXXX      "1" Ver ones digit, Version 1 is currently used
+        key14 = 13233 * 3 + 12345; //                         XXXXX     13233 = Product-ID
+        break;
+
+      default:
+        serialNo.value = "No valid Product";
+        return;
+    }
+    writeDebug("product relevant data generated");
+
+    key03 += security1;
+    key04 += security1;
+    key07 += security2;
+    key08 += security2;
+    key11 += security3;
+    key12 += security3;
+    key14 += security1;
+    key16 += security4;
+    key17 += security4;
+    key20 += security5;
+    key21 += security6;
+
+    //Grot swapped some data on these Plugins. Why? I dont know. And i dont care. =)
+    switch (product) {
+      case "0": //QCCamera Pro
+      case "1": //QCPlus
+      case "5p": //HSConnect SONOS Pro
+        temp0 = key03;
+        key03 = key07;
+        key07 = temp0;
+        //Swap around key03 and key07, because wtf
+
+        temp0 = key04;
+        key04 = key08;
+        key08 = temp0;
+        //Swap around key04 and key08, because wtf
+
+        temp0 = key10;
+        key10 = key19;
+        key19 = temp0;
+        //Swap around key10 and key19, because wtf
+
+        temp0 = key05;
+        key05 = key13;
+        key13 = temp0;
+        //Swap around key05 and key13 (the Timestamp) because wtf
+        //could even be higher than 2147483647 (19.01.2038), since its double. 9999999999 would be 20.11.2286
+        break;
+    }
+
+    writeDebug("security offsets added");
+
+    var key22 =
+      key01 +
+      key02 +
+      key03 +
+      key04 +
+      key05 +
+      key06 +
+      key07 +
+      key08 +
+      key09 +
+      key10 +
+      key11 +
+      key12 +
+      key13 +
+      key14 +
+      key15 +
+      key16 +
+      key17 +
+      key18 +
+      key19 +
+      key20 +
+      key21; //Checksum
+
+    writeDebug("checksum generated");
+
+    var licensekey = "";
+    licensekey += String(key01).padStart(3, "0");
+    licensekey += String(key02).padStart(3, "0");
+    licensekey += String(key03).padStart(4, "0");
+    licensekey += String(key04).padStart(4, "0");
+    licensekey += String(key05).padStart(3, "0");
+    licensekey += String(key06).padStart(3, "0");
+    licensekey += String(key07).padStart(4, "0");
+    licensekey += String(key08).padStart(4, "0");
+    licensekey += String(key09).padStart(3, "0");
+    licensekey += String(key10).padStart(3, "0");
+    licensekey += String(key11).padStart(4, "0");
+    licensekey += String(key12).padStart(4, "0");
+    licensekey += String(key13).padStart(3, "0");
+    licensekey += String(key14).padStart(5, "0");
+    licensekey += String(key15).padStart(3, "0");
+    licensekey += String(key16).padStart(4, "0");
+    licensekey += String(key17).padStart(4, "0");
+    licensekey += String(key18).padStart(3, "0");
+    licensekey += String(key19).padStart(3, "0");
+    licensekey += String(key20).padStart(4, "0");
+    licensekey += String(key21).padStart(4, "0");
+    licensekey += String(key22).padStart(5, "0");
+
+    writeDebug("licence key generated");
+
+    serialNo.value = licensekey;
+    document.getElementById("copyButton").disabled = false;
+    writeDebug("done");
+  }
+
+  function writeDebug(debugText) {
+    document.getElementById("debugInfo").innerHTML +=
+      "[" +
+      (Date.now() - startTime).toString().padStart(4, "0") +
+      "] " +
+      debugText +
+      "<br>";
+  }
+
+  generateSerial();
+</script>

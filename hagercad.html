@@ -1,0 +1,180 @@
+<!--
+  Hi there =)
+  Please feel free to disect this code for anything that may help you.
+  It was written in JS to allow a feeling of safety. No Serial number is transmitted to any servers, its all handled locally.
+
+  Hager probably meant best when establishing those security measures but he failed.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>HagerCAD Keygen</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>HagerCAD Keygen</h1>
+    <table>
+      <tr>
+        <td><label for="licname">Firma: </label></td>
+        <td>
+          <input
+            type="text"
+            id="licname"
+            name="licname"
+            alt="Lizenzcode HPV"
+            value="Hager France"
+            maxlength="50"
+            minlength="10"
+            length="50"
+            size="50"
+            onchange="generateSerial()"
+          />
+          Enter your "company name" here (or leave it as it is)
+        </td>
+      </tr>
+
+      <tr>
+        <td><label for="countrycode">Country code</label></td>
+        <td>
+          <input
+            type="text"
+            id="countrycode"
+            name="countrycode"
+            alt="country code"
+            value="DE"
+            maxlength="2"
+            minlength="2"
+            length="50"
+            size="50"
+            onchange="generateSerial()"
+          />
+          Enter your Country code here (DE=Germany, GB=Great Britain etc.) this
+          needs to match your PCs localization code
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <input
+            type="submit"
+            value="generate license key"
+            onClick="generateSerial()"
+            style="vertical-align: right;"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <p id="debugInfo" name="debugInfo"></p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+<script src="aes.js"></script>
+<script>
+  console.log("Please disperse!");
+  console.log("Nothing to see here.");
+
+  function generateSerial() {
+    var licname = document.getElementById("licname").value;
+    var countrycode = document
+      .getElementById("countrycode")
+      .value.toUpperCase();
+
+    if (licname.length == 0) {
+      document.getElementById("debugInfo").innerHTML = "";
+      return;
+    }
+
+    document.getElementById("debugInfo").innerHTML =
+      "Key generation started<br>";
+
+    if (licname.length < 10 || licname.length > 50) {
+      writeDebug(
+        "name length unexpected. Must be between 10 and 50 characters. Is:" +
+          licname.length +
+          "<br>"
+      );
+      return;
+    }
+    if (countrycode.length != 2) {
+      writeDebug(
+        "countrycode length unexpected. Must be 2 characters. Is:" +
+          countrycode.length +
+          "<br>"
+      );
+      return;
+    }
+
+    writeDebug(`Company: <b>${licname}</b>`);
+    writeDebug(`Country code: ${countrycode}`);
+
+    var nometpays = licname + countrycode + "hagercad.expert";
+
+    nometpays = CryptoJS.MD5(nometpays).toString();
+
+    var key = CryptoJS.enc.Hex.parse(
+      "2D338E08A5278058A4987B8C5A8F5BD89AE68E0A546092246A5E3D49257C28C4"
+    ); //                                                                     LTOOCKUngFikmHuMWo9b2JrmjgpUYJIkal49SSV8KMQ=
+    var iv = CryptoJS.enc.Hex.parse("5D522DEE3AE1A74561E88289C82E75FA"); //   XVIt7jrhp0Vh6IKJyC51+g==
+
+    nometpays = CryptoJS.AES.encrypt(nometpays, key, { iv: iv });
+    nometpays = nometpays.toString();
+
+    //first block - 53482
+    //var seed = Math.floor(Math.random() * 4000) + 1000; //1000-5000 (values above 7600 may fuck something up :D)
+    var seed = Math.floor(Math.random() * 899) + 100; //100-999
+    writeDebug(`random seed: ${seed}`);
+
+    var block = ["", "", "", "", "", "", ""];
+
+    block[0] = 53482 - nometpays.charCodeAt(2) - seed * 7;
+    block[0] = block[0].toString();
+
+    //second block - 11867
+    block[1] = 11867 + seed * nometpays.length;
+    for (let i = 0; i < 10; i++) block[1] += nometpays.charCodeAt(i);
+    block[1] = block[1].toString();
+
+    //third block - 20471
+    block[2] = 20471;
+    for (let i = 0; i < 10; i++) block[2] += nometpays.charCodeAt(i) * i * i;
+    block[2] = block[2].toString();
+
+    //fourth block - 44620
+    block[3] = 44620;
+    for (let i = 0; i < block[0].length; i++) {
+      block[3] += block[0].charCodeAt(i) + nometpays.charCodeAt(0);
+    }
+    for (let j = 0; j < block[2].length; j++) {
+      block[3] += block[2].charCodeAt(j) * 2 + nometpays.charCodeAt(3);
+    }
+    block[3] = block[3].toString();
+
+    //fifth block - 92145
+    block[4] = 92145;
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < block[i].length; j++) {
+        block[4] -= parseInt(block[i].charCodeAt(j)) * j;
+      }
+    }
+    block[4] = block[4].toString();
+
+    block[5] = Math.floor(Math.random() * 8999) + 1000; //1000-9999
+    block[6] = Math.floor(Math.random() * 8999) + 1000; //1000-9999
+
+    var serial = block.join("-");
+
+    writeDebug(`Activation code: <b>${serial}</b>`);
+  }
+
+  generateSerial();
+
+  function writeDebug(debugText) {
+    document.getElementById("debugInfo").innerHTML += debugText + "<br>";
+  }
+</script>

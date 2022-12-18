@@ -1,0 +1,336 @@
+<!--
+  Hi there =)
+  Please feel free to disect this code for anything that may help you.
+  It was written in JS to allow a feeling of safety. No Serial number is transmitted to any servers, its all handled locally.
+
+  The developer of TecSupport probably meant best when establishing those security measures but he failed.
+
+  If you use those Plugins in a private Setting - no shame. But if you make a profit of it, please support the developer by buying the product!
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="ISO-8859-1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Gira AES Decrypter</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="infobox">
+      <p id="infobox" onClick="toggleBox()">
+        <b>How to use</b>
+      </p>
+      <div class="infocontent">
+        1. Locate the Logic block that was signed to a Serial number<br>
+        2. If you have the files [ID]_[Serialnumber]_[Name].hslx and [ID]_[Name].hsl, go to <b>Step 4</b>. If you have a [ID]_[Name].hslz, go to <b>Step 3</b>.<br>
+        3. Open the .hslz file as a ZIP file (either change the extension to .zip or open it with WinRAR) and extract its Files (it should contain one .hls and one .hslx file)<br>
+        4. Select your .hsl file (i.e. <b>12345_Logicblock.hsl</b>)</br>
+        5. Select your .hslx file (i.e. <b>12345_000AB3022355_Logicblock.hslx</b>)</br>
+        6. Check the outputs of the textfields below.<br>
+         - The first should contain plain code (<b>5000|"Logicblock Title"</b> ...etc)<br>
+         - The second one should contain a lot of unreadable text.<br>
+         - The third should again contain readable code (<b>5012|0|"</b> ...etc). If the third textfield consists of "scrambled" text and [?] blocks, something went wrong.<br>
+        7. Click on the "Download .hsl file" Button to download the decrypted .hsl file
+      </div>
+    </div>
+
+    <br />
+
+    <table>
+      <tr>
+        <td><label for="request">.hsl Import: </label></td>
+        <td>
+          <input
+            id="hslupload"
+            name="files[]"
+            multiple=""
+            accept=".hsl"
+            type="file"
+            style="width: 100%;"
+          />
+        </td>
+      </tr>
+
+      <tr>
+        <td><label for="hslxupload">.hslx Import: </label></td>
+        <td>
+          <input
+            id="hslxupload"
+            name="files[]"
+            multiple=""
+            accept=".hslx"
+            type="file"
+            style="width: 100%;"
+          />
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label for="hslfile">.hsl File</label>
+        </td>
+        <td>
+          <textarea type="text" id="hslfile" name="hslfile" rows="8" cols="120">
+          </textarea>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label for="encrypted">Raw .hslx<br />(Base64)</label>
+        </td>
+        <td>
+          <textarea
+            type="text"
+            id="encrypted"
+            name="encrypted"
+            rows="8"
+            cols="120"
+          >
+          </textarea>
+        </td>
+      </tr>
+
+      <tr>
+        <td><label for="decrypted">Decrypted .hslx</label></td>
+        <td>
+          <textarea
+            type="text"
+            id="decrypted"
+            name="decrypted"
+            rows="8"
+            cols="120"
+          >
+          </textarea>
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan="2">
+          <input
+            type="button"
+            id="downloadButton"
+            name="downloadButton"
+            value="Download .hsl file"
+            onClick="download()"
+            disabled
+          />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <p id="debugInfo" name="debugInfo"></p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+<script src="aes.js"></script>
+<script>
+  console.log("Please disperse!");
+  console.log("Nothing to see here.");
+
+  //File handling as well as checks (syntax and extension) happen here
+  document.getElementById("hslupload").onchange = function (evt) {
+    if (!window.FileReader) return; // Browser is not compatible
+
+    var reader = new FileReader();
+
+    fileName = evt.target.files[0].name;
+
+    //check extension
+    lastDot = fileName.lastIndexOf(".");
+    pluginExtension = fileName.slice(lastDot + 1);
+
+    if (pluginExtension != "hsl") {
+      console.log("Wrong extension?" + pluginExtension);
+      //return;
+    }
+
+    //read the provided File
+    reader.onload = function (evt) {
+      if (evt.target.readyState != 2) return;
+      if (evt.target.error) {
+        alert("Error while reading file");
+        return;
+      }
+
+      filecontent = evt.target.result;
+
+      document.getElementById("hslfile").value = filecontent;
+    };
+
+    reader.readAsText(evt.target.files[0], "ISO-8859-1");
+    //reader.readAsText(evt.target.files[0]);
+  };
+
+  //File handling of .hslx as well as checks (syntax and extension) happen here
+  document.getElementById("hslxupload").onchange = function (evt) {
+    document.getElementById("downloadButton").disabled = true;
+    if (!window.FileReader) return; // Browser is not compatible
+    document.getElementById("debugInfo").innerHTML = "Reading File...<br>";
+
+    var reader = new FileReader();
+
+    fileName = evt.target.files[0].name;
+    pluginSize = evt.target.files[0].size;
+
+    //Get the first, the second and everything after the second _
+    const [pluginID, pluginMac, ...rest] = fileName.split("_");
+    var pluginName = rest.join("_"); //Some Plugin Names may contain _ chars.
+
+    //check extension
+    lastDot = pluginName.lastIndexOf(".");
+    pluginExtension = pluginName.slice(lastDot + 1);
+    pluginName = pluginName.slice(0, lastDot);
+
+    writeDebug(`Plugin ID: <b>${pluginID}</b>`);
+    writeDebug(`Serialnumber: <b>${pluginMac}</b>`);
+    writeDebug(`Plugin Name: <b>${pluginName}</b>`);
+    writeDebug(`Plugin Size: <b>${pluginSize} B</b>`);
+
+    if (!pluginID || !pluginMac || !pluginName || pluginExtension != "hslx") {
+      writeDebug(
+        "<b>ERROR:</b> File Syntax is wrong. <b>.hslx</b> Files should look like: [ID]_[MAC]_[NAME].hslx<br>Your file: " +
+          fileName
+      );
+      return;
+    }
+    if (isNaN(pluginID)) {
+      writeDebug(`<b>ERROR:</b> ID ${pluginID} is not a number`);
+      return;
+    }
+    if (!pluginMac.match(/[0-9A-Fa-f]{12}/g)) {
+      writeDebug(
+        `<b>ERROR:</b> Serialnumber ${pluginMac} is not a HEX-12 number`
+      );
+      return;
+    }
+
+    //read the provided File
+    reader.onload = function (evt) {
+      if (evt.target.readyState != 2) return;
+      if (evt.target.error) {
+        alert("Error while reading file");
+        return;
+      }
+
+      // WTF. This probably needs further testing!
+      filler = "                                "; //32
+      filler += filler; //64
+      filler += filler; //128
+      filler += filler; //256
+      //Without the filler spaces, the output gets truncated a few characters short...
+      //So i just append a lot of spaces and trim the output after decrypting. Hacky as fuck but it works.
+      filecontent = evt.target.result + filler;
+
+      //make the Output base64, as special characters may fuck up everything.
+      filecontent = btoa(filecontent);
+
+      document.getElementById("encrypted").value = filecontent;
+
+      //Call the decryption function at the end
+      decryptAES(pluginID, pluginMac, pluginName, pluginSize);
+    };
+
+    reader.readAsBinaryString(evt.target.files[0]);
+  };
+
+  //Decryption happens here
+  function decryptAES(pluginID, pluginMac, pluginName, pluginSize) {
+    var encrypted = document.getElementById("encrypted").value;
+    document.getElementById("decrypted").value = "";
+
+    writeDebug("Decryption started.");
+
+    //calculate the MD5 of MACmaccamCAM
+    var passphrase = pluginMac.toUpperCase() + pluginMac.toLowerCase(); // MAC+mac
+    passphrase += passphrase.split("").reverse().join(""); //       append reversed MAC+mac
+    writeDebug(`Passphrase: <b>${passphrase}</b> (super secret :D)`);
+    var md5Passphrase = String(CryptoJS.MD5(passphrase));
+    writeDebug(`md5 of Passphrase: <b>${md5Passphrase}</b>`);
+
+    //Get the IV value (as String for decryption and as int array for XOR)
+    IvRaw = atob(encrypted).slice(0, 16); //get the IV value from the first 16 bytes
+    IvRaw = IvRaw.split("");
+    IvHEX = IvRaw.map(function (c) {
+      return c.charCodeAt(0).toString(16).padStart(2, "0");
+    });
+    IvHEX = IvHEX.join("").toUpperCase();
+    IvArray = IvRaw.map(function (c) {
+      return c.charCodeAt(0);
+    });
+    writeDebug(`AES IV Value: <b>${IvHEX}</b>`);
+
+    //XOR the passphrase against the IV (hex)
+    var KeyHEX = "";
+    for (let i = 0; i < md5Passphrase.length; i++) {
+      KeyHEX += (md5Passphrase.charCodeAt(i) ^ IvArray[i % 16])
+        .toString(16)
+        .toUpperCase()
+        .padStart(2, "0");
+    }
+    writeDebug(`AES Key Value: <b>${KeyHEX}</b>`);
+
+    //Lets get to decryption, shall we?
+    var key = CryptoJS.enc.Hex.parse(KeyHEX); //                      Parse Key value from HEX
+    var iv = CryptoJS.enc.Hex.parse(IvHEX); //                        Parse IV value from HEX
+
+    decrypted = CryptoJS.AES.decrypt(encrypted, key, { iv: iv }); //  decrypt :)
+    decrypted = decrypted.toString(CryptoJS.enc.Latin1); //           parse into String
+
+    decrypted = decrypted.slice(16, pluginSize); //                   slice away the IV value and filler
+    pluginSize = decrypted.length; //                                 plugin + md5 length
+    var md5Provided = decrypted.slice(-32); //                        get the md5 value at the end
+    console.log(`md5Provided: ${md5Provided}`);
+    decrypted = decrypted.slice(0, pluginSize - 35); //               slice away the \r\n + md5 value at the end
+    var md5Calculated = CryptoJS.MD5(decrypted); //                   calculate own md5 value. why does this differ?
+    console.log(`md5Calculated: ${md5Calculated}`);
+
+    document.getElementById("decrypted").value = decrypted;
+    document.getElementById("downloadButton").disabled = false;
+    document
+      .getElementById("downloadButton")
+      .setAttribute(
+        "onclick",
+        'download("' + pluginID + "_" + pluginName + '")'
+      );
+    writeDebug("finished");
+  }
+
+  function writeDebug(debugText) {
+    document.getElementById("debugInfo").innerHTML += debugText + "<br>";
+  }
+
+  function download(pluginName) {
+    var element = document.createElement("a");
+    element.setAttribute(
+      "href",
+      "data:text/plain;charset=ISO-8859-1," +
+        encodeURIComponent(document.getElementById("hslfile").value) +
+        encodeURIComponent(document.getElementById("decrypted").value)
+    );
+    element.setAttribute("download", pluginName + ".hsl");
+
+    element.style.display = "none";
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+  }
+
+  //shamelessly copied js-snippet for collapsing the Infobox
+  function toggleBox() {
+    var infobox = document.getElementById("infobox");
+    infobox.classList.toggle("active");
+    var content = infobox.nextElementSibling;
+    if (content.style.maxHeight) {
+      content.style.maxHeight = null;
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
+  }
+</script>

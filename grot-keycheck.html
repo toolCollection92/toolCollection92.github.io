@@ -1,0 +1,328 @@
+<!--
+  Hi there =)
+  Please feel free to disect this code for anything that may help you.
+  It was written in JS to allow a feeling of safety. No Serial number is transmitted to any servers, its all handled locally.
+
+  The developer of Grot probably meant best when establishing those security measures but he failed.
+
+  If you use those Plugins in a private Setting - no shame. But if you make a profit of it, please support the developer by buying the product!
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Grot Keychecker</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Grot Keychecker</h1>
+    <table>
+      <tr>
+        <td><label for="serialNo">License Key</label></td>
+        <td>
+          <input
+            type="text"
+            id="serialNo"
+            name="serialNo"
+            alt="Grot License Key"
+            value=""
+            maxlength="80"
+            minlength="80"
+            length="80"
+            size="85"
+            onChange="checkSerial()"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td><label for="altGen">Alternate Generation?</label></td>
+        <td>
+          <input
+            type="checkbox"
+            id="altGen"
+            name="altGen"
+            onChange="checkSerial()"
+          />
+          (Is used on QCCamera, QCPlus and Sonos Quadclient Plugins)
+        </td>
+      </tr>
+      <tr>
+        <td><label for="startCheck">Check</label></td>
+        <td>
+          <input
+            id="startCheck"
+            name="startCheck"
+            type="button"
+            onClick="checkSerial()"
+            value="Check"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <p id="debugInfo" name="debugInfo"></p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+<script>
+  console.log("Please disperse!");
+  console.log("Nothing to see here.");
+  const keyText = [
+    "Time-1",
+    "Seed-1",
+    "MAC-1",
+    "Var-1",
+    "Time-2",
+    "Seed-2",
+    "MAC-2",
+    "Var-2",
+    "Time-3",
+    "Seed-3",
+    "MAC-3",
+    "Ver-1",
+    "Time-4",
+    "Product",
+    "Seed-4",
+    "MAC-4",
+    "Ver-2",
+    "Time-5",
+    "Seed-5",
+    "MAC-5",
+    "MAC-6",
+    "Checksum"
+  ];
+  var debug = document.getElementById("debugInfo");
+  var keys = [];
+
+  function checkSerial() {
+    debug.innerHTML = "LicenseCheck started<br>";
+
+    var serialNo = document.getElementById("serialNo").value;
+
+    if (serialNo.length != 80) {
+      debug.innerHTML +=
+        "Key length unexpected. Expected:80 Is:" + serialNo.length + "<br>";
+      return;
+    }
+
+    if (!serialNo.match(/^([0-9]{80})$/)) {
+      debug.innerHTML +=
+        "Key contains letters, may only contain digits 0-9<br>";
+      return;
+    }
+    //0     1     2     3     4     5     6     7     8     9     10    11    12    13      14    15    16    17    18    19    20    21
+    //t-74	|48|	DF_6	L-1	  t-63	|14|	C0_5	L-2	  t-84	|79|	40_4	L-3	  t-74	?????	  |48|	3B_3	L-4	  t-21	|51|	A0_2	00_1	Prüfsumme
+    //116	  072	  0630	0233	099	  020	  0994	0466	132	  121	  0997	0789	116	  42832	  072	  1269	1023	018	  081	  1457	0849	52386	EOL
+    keys = [];
+    keys.push(parseInt(serialNo.substr(00, 3)));
+    keys.push(parseInt(serialNo.substr(03, 3)));
+    keys.push(parseInt(serialNo.substr(06, 4)));
+    keys.push(parseInt(serialNo.substr(10, 4)));
+    keys.push(parseInt(serialNo.substr(14, 3)));
+    keys.push(parseInt(serialNo.substr(17, 3)));
+    keys.push(parseInt(serialNo.substr(20, 4)));
+    keys.push(parseInt(serialNo.substr(24, 4)));
+    keys.push(parseInt(serialNo.substr(28, 3)));
+    keys.push(parseInt(serialNo.substr(31, 3)));
+    keys.push(parseInt(serialNo.substr(34, 4)));
+    keys.push(parseInt(serialNo.substr(38, 4)));
+    keys.push(parseInt(serialNo.substr(42, 3)));
+    keys.push(parseInt(serialNo.substr(45, 5)));
+    keys.push(parseInt(serialNo.substr(50, 3)));
+    keys.push(parseInt(serialNo.substr(53, 4)));
+    keys.push(parseInt(serialNo.substr(57, 4)));
+    keys.push(parseInt(serialNo.substr(61, 3)));
+    keys.push(parseInt(serialNo.substr(64, 3)));
+    keys.push(parseInt(serialNo.substr(67, 4)));
+    keys.push(parseInt(serialNo.substr(71, 4)));
+    keys.push(parseInt(serialNo.substr(75, 5)));
+
+    var tableHTML = "<table><tr>";
+    keyText.forEach(
+      (element) => (tableHTML += '<td style="width:70px">' + element + "</td>")
+    );
+
+    tableHTML += "</tr><tr>";
+
+    keys.forEach((element) => (tableHTML += "<td>" + element + "</td>"));
+
+    tableHTML += "</tr></table>";
+    debug.innerHTML += tableHTML;
+
+    var checksum = 0;
+    for (let i = 0; i < 21; i++) checksum += keys[i];
+
+    if (checksum == keys[21]) {
+      debug.innerHTML += `Checksum is valid. (${keys[21]})<br>`;
+    } else {
+      debug.innerHTML += `Checksum is invalid. Calculated:${checksum} Key:${keys[21]}<br>`;
+      return;
+    }
+
+    keys.unshift(0); // Adding a 0 as index 0, to make things easier for me :D
+
+    //Preparing Security Keys
+    keys[2] = keys[2].toString(16).padStart(2, "0");
+    keys[6] = keys[6].toString(16).padStart(2, "0");
+    keys[10] = keys[10].toString(16).padStart(2, "0");
+    keys[15] = keys[15].toString(16).padStart(2, "0");
+    keys[19] = keys[19].toString(16).padStart(2, "0");
+
+    if (document.getElementById("altGen").checked) {
+      //Grot swapped some values on these Plugins. Why? I dont know. And i dont care. =)
+      var temp0 = 0;
+      temp0 = keys[03];
+      keys[03] = keys[07];
+      keys[07] = temp0;
+      //Swap around key03 and key07, because wtf
+
+      temp0 = keys[04];
+      keys[04] = keys[08];
+      keys[08] = temp0;
+      //Swap around key04 and key08, because wtf
+
+      temp0 = keys[05];
+      keys[05] = keys[13];
+      keys[13] = temp0;
+      //Swap around key05 and key13 (the Timestamp) because wtf
+      //could even be higher than 2147483647 (19.01.2038), since its double. 9999999999 would be 20.11.2286
+
+      temp0 = keys[10];
+      keys[10] = keys[19];
+      keys[19] = temp0;
+      //Swap around key10 and key19, because wtf
+    }
+
+    //Security Seed
+    var seedReverse = keys[2] + keys[6] + keys[10] + keys[15] + keys[19];
+
+    var seed = seedReverse.split("").reverse().join("");
+    debug.innerHTML += `seed: ${seed}<br>`;
+
+    var security1 = parseInt(seed.substr(7, 3));
+    var security2 = parseInt(seed.substr(6, 3));
+    var security3 = parseInt(seed.substr(5, 3));
+    var security4 = parseInt(seed.substr(4, 3));
+    var security5 = parseInt(seed.substr(3, 3));
+    var security6 = parseInt(seed.substr(2, 3));
+    debug.innerHTML += `security1: ${security1}<br>`;
+    debug.innerHTML += `security2: ${security2}<br>`;
+    debug.innerHTML += `security3: ${security3}<br>`;
+    debug.innerHTML += `security4: ${security4}<br>`;
+    debug.innerHTML += `security5: ${security5}<br>`;
+    debug.innerHTML += `security6: ${security6}<br>`;
+
+    //delete security offsets
+    keys[3] -= security1;
+    keys[4] -= security1;
+    keys[7] -= security2;
+    keys[8] -= security2;
+    keys[11] -= security3;
+    keys[12] -= security3;
+    keys[14] -= security1;
+    keys[16] -= security4;
+    keys[17] -= security4;
+    keys[20] -= security5;
+    keys[21] -= security6;
+
+    keys[14] -= 12345;
+    keys[14] = keys[14] / 3;
+    debug.innerHTML += `Product Code: <b>${keys[14]}</b><br>Product Code is `;
+    switch (keys[14]) {
+      case 10101: //QCCamera Pro
+        debug.innerHTML += "for <b>QCCamera Pro</b>";
+        break;
+
+      case 10103: //QCPlus
+        debug.innerHTML += "for <b>QCPlus</b>";
+        break;
+
+      case 13461: //HS-WeatherForecast
+        debug.innerHTML += "for <b>HS-WeatherForecast</b>";
+        break;
+
+      case 13230: //HSConnect Hue
+        debug.innerHTML += "for <b>HSConnect Hue</b>";
+        break;
+
+      case 13450: //HSConnect HomeCockpit
+        debug.innerHTML += "for <b>HSConnect HomeCockpit</b>";
+        break;
+
+      case 13210: //HSConnect SONOS Pro
+        debug.innerHTML += "for <b>HSConnect SONOS Pro</b>";
+        break;
+
+      case 25501: //ScenarioPro
+      case 13280: //ScenarioPro, too (?)
+        debug.innerHTML += "for <b>ScenarioPro</b>";
+        break;
+
+      case 13233: //ArchiveSQL
+        debug.innerHTML += "for <b>ArchiveSQL</b>";
+        break;
+
+      default:
+        debug.innerHTML += "<b>not recognized (Alternate Generation?)</b>";
+        return;
+    }
+    debug.innerHTML += "<br>";
+
+    //MAC adress check
+    keys[3] /= 2;
+    keys[7] /= 3;
+    keys[11] /= 4;
+    keys[16] /= 5;
+    keys[20] /= 6;
+    keys[21] /= 7;
+    keys[3] = keys[3].toString(16).padStart(2, "0");
+    keys[7] = keys[7].toString(16).padStart(2, "0");
+    keys[11] = keys[11].toString(16).padStart(2, "0");
+    keys[16] = keys[16].toString(16).padStart(2, "0");
+    keys[20] = keys[20].toString(16).padStart(2, "0");
+    keys[21] = keys[21].toString(16).padStart(2, "0");
+
+    var macReverse =
+      keys[3] + keys[7] + keys[11] + keys[16] + keys[20] + keys[21];
+
+    var mac = macReverse.split("").reverse().join("").toUpperCase();
+    debug.innerHTML += `MAC: <b>${mac}</b><br>`;
+
+    //Time check
+    keys[1] = keys[1].toString(16).padStart(2, "0");
+    keys[5] = keys[5].toString(16).padStart(2, "0");
+    keys[9] = keys[9].toString(16).padStart(2, "0");
+    keys[13] = keys[13].toString(16).padStart(2, "0");
+    keys[18] = keys[18].toString(16).padStart(2, "0");
+
+    var lictimeReverse = keys[1] + keys[5] + keys[9] + keys[13] + keys[18];
+
+    var lictime = lictimeReverse.split("").reverse().join("");
+    debug.innerHTML += `time: ${lictime}<br>`;
+    var date = new Date(parseInt(lictime) * 1000);
+    const dateoptions = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    };
+    var datestring = date.toLocaleDateString("de-DE", dateoptions);
+    debug.innerHTML += `Key is valid until: <b>${datestring}</b><br>`;
+
+    //Variant & Version Check
+    keys[4] -= 48; // Ez Pz way to make ASCII 0 to INT 0
+    keys[8] -= 48;
+    keys[12] -= 48;
+    keys[17] -= 48;
+
+    var varKey = keys[4] * 10 + keys[8];
+    var verKey = keys[12] * 10 + keys[17];
+    debug.innerHTML += `Product Variant: <b>${varKey}</b><br>`;
+    debug.innerHTML += `Product Version: <b>${verKey}</b><br>`;
+  }
+</script>

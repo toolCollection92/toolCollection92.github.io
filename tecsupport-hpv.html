@@ -1,0 +1,183 @@
+<!--
+  Hi there =)
+  Please feel free to disect this code for anything that may help you.
+  It was written in JS to allow a feeling of safety. No Serial number is transmitted to any servers, its all handled locally.
+
+  The developer of TecSupport probably meant best when establishing those security measures but he failed.
+
+  If you use those Plugins in a private Setting - no shame. But if you make a profit of it, please support the developer by buying the product!
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>HPV Keygen</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>HPV Keygen</h1>
+    <table>
+      <tr>
+        <td><label for="request">Lizenzcode: </label></td>
+        <td>
+          <input
+            type="text"
+            id="request"
+            name="request"
+            alt="Lizenzcode HPV"
+            value=""
+            maxlength="64"
+            minlength="64"
+            length="64"
+            size="70"
+            onchange="generateSerial()"
+          />
+          Enter the "request String" here
+        </td>
+      </tr>
+
+      <tr>
+        <td><label for="serialNo">license.hpvlicimport</label></td>
+        <td>
+          <textarea
+            type="text"
+            id="serialNo"
+            name="serialNo"
+            rows="12"
+            cols="120"
+            alt="TecSupport License Key"
+            readonly
+          >
+          </textarea>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <input
+            type="submit"
+            value="generate license key"
+            onClick="generateSerial()"
+            style="vertical-align: right;"
+          />
+
+          <input
+            type="button"
+            id="downloadButton"
+            name="downloadButton"
+            value="Download License File"
+            disabled
+            onClick="download()"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <p id="debugInfo" name="debugInfo"></p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+<script src="aes.js"></script>
+<script>
+  console.log("Please disperse!");
+  console.log("Nothing to see here.");
+
+  function generateSerial() {
+    document.getElementById("downloadButton").disabled = true;
+    var request = document.getElementById("request").value;
+
+    if (request.length == 0) {
+      document.getElementById("debugInfo").innerHTML = "";
+      return;
+    }
+
+    document.getElementById("debugInfo").innerHTML =
+      "Key generation started<br>";
+
+    if (request.length != 64) {
+      writeDebug(
+        "length unexpected. Expected:64 Is:" + request.length + "<br>"
+      );
+      return;
+    }
+
+    //Original code:
+    //              string password = "WerDasLiestIstDOOOF.FingerWegVonMeinemCode:(";
+    //i truly appreciate the sad smileyface! But no code tells me what to do ò_ó
+
+    //To save PRECIOUS milliseconds of Key generation, i'm just using the raw key/IV data :)
+    var key = CryptoJS.enc.Hex.parse(
+      "D3C76251F4AC33C66719DDC884B2F5701C8C84C1DF0E6320943C643ADEC68488"
+    );
+    var iv = CryptoJS.enc.Hex.parse("73CAE9BBAA408A67458C77E6A3994279");
+
+    //var requestString =
+    //  "dQ6C42sGOKJ0hfqKRL+Im1ik5cjCh/0nZ8oYsKlffo1aWBXPG+5ZQ8sUFjjhGN3w";
+
+    request = CryptoJS.AES.decrypt(request, key, { iv: iv });
+    request = request.toString(CryptoJS.enc.Latin1);
+    writeDebug(`decrypted request code: ${request}`);
+
+    if (request.substr(0, 7) == "K\x00N\x00X\x00-") {
+      // KNX-Dongle license
+    } else {
+      // MainboardSerial license
+    }
+
+    text8 = CryptoJS.AES.encrypt(request, key, { iv: iv });
+
+    var text7 = Math.floor(Math.random() * 9999) + 10000; // i LOVE random customer numbers :)
+    writeDebug(`customer no (this is random): ${text7}`);
+    var text6 = "005"; // 1000 projects
+    var text5 = "TecSupport_B._Schneider__"; // ;)
+    var text4 = text8 + text7 + text6 + text5;
+
+    text4 = text4.split("").join("\x00") + "\x00";
+    text4 = String(CryptoJS.AES.encrypt(text4, key, { iv: iv })); // <- i have to "force" it into a string
+
+    var licenseMD5 = CryptoJS.MD5(text4).toString().toUpperCase(); // MD5-Checksum
+    licenseMD5 = licenseMD5.match(/.{2}/g).join("-"); // Convert it to weird format :)
+    licenseMD5 = licenseMD5.split("").join("\x00") + "\x00"; // add our beloved 0-byte characters to fluff up the serial
+    writeDebug(`MD5 Checksum: ${licenseMD5}`);
+
+    var text3 = String(CryptoJS.AES.encrypt(licenseMD5, key, { iv: iv }));
+
+    var text2 = text4 + text3;
+    text2 = text2.split("").join("\x00") + "\x00";
+    console.log(text2);
+
+    var text = String(CryptoJS.AES.encrypt(text2, key, { iv: iv }));
+    writeDebug("Serial length: " + text.length);
+
+    document.getElementById("serialNo").value = text;
+    writeDebug("Key generation successfull!");
+    document.getElementById("downloadButton").disabled = false;
+  }
+
+  generateSerial();
+
+  function writeDebug(debugText) {
+    document.getElementById("debugInfo").innerHTML += debugText + "<br>";
+  }
+
+  function download() {
+    var element = document.createElement("a");
+    element.setAttribute(
+      "href",
+      "data:text/plain;charset=utf-8," +
+        encodeURIComponent(document.getElementById("serialNo").value)
+    );
+    element.setAttribute("download", "license.hpvlicimport");
+
+    element.style.display = "none";
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+  }
+</script>

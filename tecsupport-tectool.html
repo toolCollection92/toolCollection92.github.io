@@ -1,0 +1,210 @@
+<!--
+  Hi there =)
+  Please feel free to disect this code for anything that may help you.
+  It was written in JS to allow a feeling of safety. No Serial number is transmitted to any servers, its all handled locally.
+
+  The developer of TecSupport probably meant best when establishing those security measures but he failed.
+
+  If you use those Plugins in a private Setting - no shame. But if you make a profit of it, please support the developer by buying the product!
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>TecTool Keygen</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="infobox">
+      <p id="infobox" onClick="toggleBox()">
+        <b>Information</b>
+      </p>
+      <div class="infocontent">
+        Commands for easier copying:<br />
+        <textarea readonly rows="4" cols="30">
+wmic cpu get processorid
+
+wmic csproduct get UUID          
+</textarea
+        ><br />
+        How to use:<br />
+        <ol>
+          <li>
+            Enter the Commands next to the input fields in the command prompt
+            (WIN+R -> cmd) or (WIN+X -> Command Prompt)
+          </li>
+          <li>fill in the values the commands return</li>
+          <li>
+            Click “generate license key” (or just click somewhere, it should
+            generate the license automatically)
+          </li>
+          <li>
+            Open the TecTool Software and click on the Settings Cog ->
+            Configuration -> Export (save this somewhere and open the file with
+            notepad)
+          </li>
+          <li>
+            copy the three lines that appeared next to “license Key” and put
+            them inside the config file (before
+            <code>&lt;/TecTool.Klassen.UserSettings&gt;</code>)
+          </li>
+          <li>import the settings file. TecTool should now be licensed.</li>
+        </ol>
+      </div>
+    </div>
+
+    <br />
+
+    <table>
+      <tr>
+        <td><label for="cpuid">ProcessorId</label></td>
+        <td>
+          <input
+            type="text"
+            id="cpuid"
+            name="cpuid"
+            alt="CPU ID"
+            placeholder="0123456789ABCDEF"
+            maxlength="16"
+            minlength="16"
+            length="16"
+            size="39"
+            style="text-transform: uppercase;"
+            onchange="generateSerial()"
+          />
+          <kbd class="keyboard-key nowrap">⊞ Win</kbd> +
+          <kbd class="keyboard-key nowrap">R</kbd>
+          &#10143; type "cmd" &#10143; type "wmic cpu get processorid"
+        </td>
+      </tr>
+
+      <tr>
+        <td><label for="uuid">UUID</label></td>
+        <td>
+          <input
+            type="text"
+            id="uuid"
+            name="uuid"
+            alt="UUID"
+            placeholder="01234567-89AB-CDEF-0123-456789ABCDEF"
+            maxlength="36"
+            minlength="36"
+            length="36"
+            size="39"
+            style="text-transform: uppercase;"
+            onchange="generateSerial()"
+          />
+          <kbd class="keyboard-key nowrap">⊞ Win</kbd> +
+          <kbd class="keyboard-key nowrap">R</kbd>
+          &#10143; type "cmd" &#10143; type "wmic csproduct get UUID"
+        </td>
+      </tr>
+
+      <tr>
+        <td><label for="serialNo">License Key</label></td>
+        <td>
+          <textarea
+            type="text"
+            id="serialNo"
+            name="serialNo"
+            alt="TecTool License Key"
+            readonly
+            rows="3"
+            cols="120"
+          >
+          </textarea>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <input
+            type="submit"
+            value="generate license key"
+            onClick="generateSerial()"
+            style="vertical-align: right;"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <p id="debugInfo" name="debugInfo"></p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+<script src="aes.js"></script>
+<script>
+  console.log("Please disperse!");
+  console.log("Nothing to see here.");
+
+  function generateSerial() {
+    //var CPUID = "178BFBFF00800F11";
+    //var UUID = "9F6FD97C-29F8-0034-ADD7-107B44197C48";
+    var CPUID = document.getElementById("cpuid").value;
+    var UUID = document.getElementById("uuid").value;
+    var serialNo = document.getElementById("serialNo");
+
+    document.getElementById("debugInfo").innerHTML = "LicenseGen started<br>";
+
+    if (CPUID.length < 8) {
+      serialNo.value = "No valid CPU ID";
+      return;
+    }
+    if (UUID.length < 32) {
+      serialNo.value = "No valid Mainboard UUID";
+      return;
+    }
+
+    CPUID = CPUID.substr(0, 4) + CPUID.substr(-5, 4);
+    UUID = UUID.substr(24, 8);
+    var license = randomChars(4) + CPUID + UUID + randomChars(4);
+    license = license.split("").join("\x00") + "\x00"; // add our beloved 0-byte characters to fluff up the serial
+    writeDebug("license raw: <b>" + license + "</b>");
+
+    var key = CryptoJS.enc.Hex.parse(
+      "64FC46CF1B68418FDD25C6E1FF173F4234FD9128455F7D5E7DFDA4CB294B4B84"
+    );
+    var iv = CryptoJS.enc.Hex.parse("6BB88A18BE607A197878E40223874A73");
+
+    license = CryptoJS.AES.encrypt(license, key, { iv: iv });
+
+    writeDebug("encrypted: <b>" + license + "</b>");
+    serialNo.value =
+      '            <setting name="Lizenz" serializeAs="String">\r\n';
+    serialNo.value += "                <value>" + license + "</value>\r\n";
+    serialNo.value += "            </setting>";
+  }
+
+  generateSerial();
+
+  function writeDebug(debugText) {
+    document.getElementById("debugInfo").innerHTML += debugText + "<br>";
+  }
+
+  function randomChars(length) {
+    var result = "";
+    var characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+  }
+
+  //shamelessly copied js-snippet for collapsing the Infobox
+  function toggleBox() {
+    var infobox = document.getElementById("infobox");
+    infobox.classList.toggle("active");
+    var content = infobox.nextElementSibling;
+    if (content.style.maxHeight) {
+      content.style.maxHeight = null;
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
+  }
+</script>
