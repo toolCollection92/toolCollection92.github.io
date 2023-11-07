@@ -50,13 +50,15 @@
             alt="Grot Product"
             onChange="generateSerial()"
           >
-            <option value="0">QCCamera Pro (50 Cameras)</option>
+            <option value="0a">QCCamera Pro v2.3 (50 Cameras)</option>
+            <option value="0b">QCCamera Pro v3.0 (50 Cameras)</option>
             <option value="1">QCPlus</option>
             <option value="2">HS-WeatherForecast</option>
             <option value="3">HSConnect Hue (Unlimited Lamps)</option>
             <option value="4">HSConnect HomeCockpit</option>
             <option value="5">HSConnect SONOS Pro (32 Zones)</option>
             <option value="5p">HSConnect SONOS Pro Plugin</option>
+            <option value="8">HSConnect Heos (32 Player)</option>
             <option value="6">ScenarioPro (Professional)</option>
             <option value="7">ArchiveSQL (Professional)</option>
           </select>
@@ -183,7 +185,8 @@
     var temp0 = 0;
 
     switch (product) {
-      case "0": //QCCamera Pro
+      case "0a": //QCCamera Pro v2.3
+      case "0b": //QCCamera Pro v3.0
         key04 = 53; //                                        XXXX      "5" Cameras tens digit
         key08 = 49; //                                        XXXX      "1" Cameras ones digit (50 Cameras + Door Station)
         key12 = 48; //                                        XXXX      "0" Version tens digit
@@ -232,6 +235,14 @@
         key14 = 13210 * 3 + 12345; //                         XXXXX     13210 = Product-ID
         break;
 
+      case "8": //HSConnect Heos
+        key04 = 51; //                                        XXXX      "3" Var tens digit
+        key08 = 50; //                                        XXXX      "2" Var ones digit -> 32 Players
+        key12 = 48; //                                        XXXX      "0" Version tens digit
+        key17 = 49; //                                        XXXX      "1" Version ones digit, Version 1 is currently used
+        key14 = 13465 * 3 + 12345; //                         XXXXX     13465 = Product-ID
+        break;
+
       case "6": //ScenarioPro
         key04 = 48; //                                        XXXX      "0" Var tens digit
         key08 = 49; //                                        XXXX      "1" Var ones digit, 0=Standard, 1=Professional
@@ -268,7 +279,7 @@
 
     //Grot swapped some data on these Plugins. Why? I dont know. And i dont care. =)
     switch (product) {
-      case "0": //QCCamera Pro
+      case "0b": //QCCamera Pro
       case "1": //QCPlus
       case "5p": //HSConnect SONOS Pro
         temp0 = key03;
